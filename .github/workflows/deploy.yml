@@ -4,6 +4,12 @@ on:
     branches:
       - master
  
+name: Deploy MultiDocker
+on:
+  push:
+    branches:
+      - main
+ 
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,18 +18,16 @@ jobs:
       - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - run: docker build -t shiri2001/react-test -f ./client/Dockerfile.dev ./client
       - run: docker run -e CI=true shiri2001/react-test npm test
-      - run: docker build -t shiri2001/multi-client ./client
-      - run: docker build -t shiri2001/multi-nginx ./nginx
-      - run: docker build -t shiri2001/multi-server ./server
-      - run: docker build -t shiri2001/multi-worker ./worker
-      # Log in to the docker CLI
-      - run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      # Take those images and push them to docker hub
-      - run: docker push shiri2001/multi-client
-      - run: docker push shiri2001/multi-nginx
-      - run: docker push shiri2001/multi-server
-      - run: docker push shiri2001/multi-worker
-
+ 
+      - run: docker build -t shiri2001/multi-client-10-14 ./client
+      - run: docker build -t shiri2001/multi-nginx-10-14 ./nginx
+      - run: docker build -t shiri2001/multi-server-10-14 ./server
+      - run: docker build -t shiri2001/multi-worker-10-14 ./worker
+ 
+      - run: docker push shiri2001/multi-client-10-14
+      - run: docker push shiri2001/multi-nginx-10-14
+      - run: docker push shiri2001/multi-server-10-14
+      - run: docker push shiri2001/multi-worker-10-14
  
       - name: Generate deployment package
         run: zip -r deploy.zip . -x '*.git*'
@@ -36,7 +40,6 @@ jobs:
           application_name: docker
           environment_name: Docker-env
           existing_bucket_name: elasticbeanstalk-us-east-1-996957847444
-          bucket_path: docker
           region: us-east-1
           version_label: ${{ github.sha }}
           deployment_package: deploy.zip
